@@ -31,6 +31,7 @@
 #include <iostream>
 #include <string>  // for string, to_string, etc
 #include <cmath> // for sqrt, sin, pow
+#include <climits> // For SHRT_MAX, SHRT_MIN, etc
 #include <limits> // For SHRT_MAX, SHRT_MIN, etc
 #include <iomanip> // for setprecision, setw, fixed
 #include<array>  // for array
@@ -40,20 +41,28 @@
 #include <sstream> // for stringstream (used in humanizeInteger, humanizeDouble, etc)
 #include <vector> // to use vectors
 #include <fstream> // For ifstream, ofstrea, fstream
-#include <numeric> // For accumulate, transform_reduce, (in the vectors)
+#include <numeric> // For accumulate, transform_reduce, inner_product (in the vectors)
 #include <algorithm> // For max_element, min_element, find, transform (to use in vectors), or for max()
+#include <regex> // For regex, regex_match
 
 using std::cout;
 using std::endl;
 using std::cin;
 using std::fixed;
 using std::setprecision;
+using std::setw;
+using std::setfill;
 using std::string;
 using std::to_string;
 using std::stringstream;
 using std::accumulate;
 using std::vector;
 using std::find;
+using std::regex;
+using std::regex_match;
+using std::stoi;
+using std::stod;
+using std::isalpha;
 
 // Prints a given value, of almost any kind, once in the terminal
 template<typename T>
@@ -75,11 +84,23 @@ void prinLineNTimes(const T &, int);
 template<typename T>
 auto getValue(const string &) -> T;
 
-// Receives and validates an integer number from the console
-int getInteger(const string &, int, int, bool = false, const string & = "Invalid input. Please try again.");
+// Determines if a given string is a valid integer, using a regular expression
+bool isInteger(const string &input);
 
-// Receives and validates a double number from the console
-double getDouble(const string &, double, double, bool = false, const string & = "Invalid input. Please try again.");
+// Determines if a given string is a valid floating point number, using a regular expression
+bool isFloatingPoint(const string &input);
+
+// Receives and validates an integer number from the console
+int getInteger(const string &, int, int, bool = false, const string & = "Invalid input. Please try again.", const vector<int> & = {});
+
+// Receives and validates a double number (or the equivalent of an integer) from the console
+double getDouble(const string &, double, double, bool = false, const string & = "Invalid input. Please try again.", const vector<double> & = {});
+
+// Determines if a given string is a single valid char
+bool containsSingleChar(const string &input);
+
+// Receives and validates a char from the console
+char getAlphaChar(const string &, const string & = "Invalid input. Please try again.");
 
 // Gets a string with or without spaces, from the terminal, as a response of a given question
 string getStringFromMessage(const string &);
@@ -269,38 +290,101 @@ auto getValue(const string &message) -> T {
     return value;
 }
 
+// Determines if a given string is a valid integer, using a regular expression
+bool isInteger(const string &input) {
+    const regex pattern("^[+-]?[0-9]+$");
+    return regex_match(input, pattern);
+}
+
+// Determines if a given string is a valid floating point number, using a regular expression
+bool isFloatingPoint(const string &input) {
+    const regex pattern("^[+-]?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$");
+    return regex_match(input, pattern);
+}
+
 // Receives and validates an integer number from the console
-int getInteger(const string &message, const int minValue, const int maxValue, const bool showRange, const string &errorMessage) {
-    int number = 0; // Number typed by the user
-    bool invalidInput; // If the input is valid
+int getInteger(const string &message, const int minValue, const int maxValue, const bool showRange, const string &errorMessage, const vector<int> &sentinelValues) {
+    string numberAsString; // Value typed by the user, that can be an integer or not
+    int number = 0; // Integer convertion (if possible) of the value typed by the user
+    bool keepAsking = true; // If we must keep asking for a value to the user, until receiving an integer
 
     do {
         cout << message << (showRange ? (" (" + to_string(minValue) + " - " + to_string(maxValue) + ")") : "") << ": ";
-        cin >> number;
-        cin.ignore();
+        getline(cin, numberAsString);
 
-        invalidInput = number < minValue || maxValue < number;
-        if (invalidInput) cout << errorMessage << endl;
-    } while (invalidInput);
+        if (const bool isIntegerNumber = isInteger(numberAsString); !isIntegerNumber) {
+            cout << "That's not an integer number. Try again." << endl;
+            continue; // There is no point in keep validating any further, as it's not even an integer
+        }
+
+        number = stoi(numberAsString); // When we reach this point, that means we have a proper integer
+        const bool invalidInput = number < minValue || maxValue < number; // If the input is valid, based only in minimum & maximum possible values
+        // If the typed number is not among the given sentinel values (breaking values)
+        const bool numberIsNotSentinel = count(sentinelValues.begin(), sentinelValues.end(), number) == 0;
+        keepAsking = invalidInput && numberIsNotSentinel;
+        if (keepAsking) cout << errorMessage << endl;
+    } while (keepAsking);
 
     return number;
 }
 
-// Receives and validates a double number from the console
-double getDouble(const string &message, const double minValue, const double maxValue, const bool showRange, const string &errorMessage) {
-    double number = 0; // Number typed by the user
-    bool invalidInput; // If the input is valid
+// Receives and validates a double number (or the equivalent of an integer) from the console
+double getDouble(const string &message, const double minValue, const double maxValue, const bool showRange, const string &errorMessage, const vector<double> &sentinelValues) {
+    string numberAsString; // Value typed by the user, that can be a valid (integer or floating point) number or not
+    double number = 0; // Double convertion (if possible) of the value typed by the user
+    bool keepAsking = true; // If we must keep asking for a value to the user, until receiving either an integer or a flating point number
 
     do {
-        cout << message << (showRange ? (" (" + to_string(minValue) + " - " + to_string(maxValue) + ")") : "") << ": ";
-        cin >> number;
-        cin.ignore();
+        cout << fixed << setprecision(2) << message;
+        if (showRange)
+            cout << " (" << minValue << " - " << maxValue << ")";
+        cout << ": ";
+        getline(cin, numberAsString);
 
-        invalidInput = number < minValue || maxValue < number;
-        if (invalidInput) cout << errorMessage << endl;
-    } while (invalidInput);
+        if (const bool isIntegerOrFloatingPointNumber = isInteger(numberAsString) || isFloatingPoint(numberAsString); !isIntegerOrFloatingPointNumber) {
+            cout << "That's not an integer number nor a valid floating point number. Try again." << endl;
+            continue; // There is no point in keep validating any further, as it's not even a valid integer nor a floating point number
+        }
+
+        number = std::stod(numberAsString); // When we reach this point, that means we have either a proper integer or a floating point number
+        const bool invalidInput = number < minValue || maxValue < number; // If the input is valid, based only in minimum & maximum possible values
+        // If the typed number is not among the given sentinel values (breaking values)
+        const bool numberIsNotSentinel = count(sentinelValues.begin(), sentinelValues.end(), number) == 0;
+        keepAsking = invalidInput && numberIsNotSentinel;
+        if (keepAsking) cout << errorMessage << endl;
+    } while (keepAsking);
 
     return number;
+}
+
+bool containsSingleChar(const string &input) {
+    if (input.empty() || input.length() > 1) return false;
+    return true;
+}
+
+char getAlphaChar(const string &message, const string &errorMessage) {
+    string characterAsString; // Value typed by the user, that can be a char or not
+    char character = 'A'; // Char convertion (if possible) of the value typed by the user
+    bool isNotAlphaCharacter = true; // If the character is alphabetic
+
+    do {
+        cout << message << ": ";
+        getline(cin, characterAsString);
+
+        if (!containsSingleChar(characterAsString)) {
+            cout << "That's not a single character. Try again." << endl;
+            continue; // There is no point in keep validating any further, as it's not even a valid char
+        }
+
+        // const char *characterPointer = characterAsString.data(); // Only valid on C++ 17 or newer
+        const char *characterPointer = characterAsString.c_str();
+        character = characterPointer[0];
+
+        isNotAlphaCharacter = !isalpha(character);
+        if (isNotAlphaCharacter) cout << errorMessage << endl;
+    } while (isNotAlphaCharacter);
+
+    return character;
 }
 
 // Gets a string with or without spaces, from the terminal, as a response of a given question
