@@ -42,8 +42,9 @@
 #include <vector> // to use vectors
 #include <fstream> // For ifstream, ofstrea, fstream
 #include <numeric> // For accumulate, transform_reduce, inner_product (in the vectors)
-#include <algorithm> // For max_element, min_element, find, transform (to use in vectors), or for max()
+#include <algorithm> // For max_element, min_element, find, transform (to use in vectors), or for max(), reverse
 #include <regex> // For regex, regex_match
+#include <cstring> // For strrev
 
 using std::cout;
 using std::endl;
@@ -298,7 +299,8 @@ bool isInteger(const string &input) {
 
 // Determines if a given string is a valid floating point number, using a regular expression
 bool isFloatingPoint(const string &input) {
-    const regex pattern("^[+-]?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$");
+    // const regex pattern("^[+-]?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$");
+    const regex pattern(R"(^[+-]?[0-9]+(.[0-9]+)?([eE][+-]?[0-9]+)?$)");
     return regex_match(input, pattern);
 }
 
