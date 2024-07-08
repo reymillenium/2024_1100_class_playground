@@ -61,6 +61,7 @@ using std::vector;
 using std::find;
 using std::regex;
 using std::regex_match;
+using std::regex_search;
 using std::stoi;
 using std::stod;
 using std::isalpha;
@@ -209,6 +210,33 @@ bool isInvalid(long double value, double);
 
 // Prints on the terminal a text if the given value is lower than the also given minimum value
 void scoldUserIfInvalidInput(long double, double);
+
+// Function to validate the DateTime(YYYY-MM-DD HH:MM:SS)
+bool validDateTime(const string &);
+
+// Function to extract all the components of a DateTime(YYYY-MM-DD HH:MM:SS)
+vector<string> getComponentsFromDateTime(const string &);
+
+// Function to extract the year from a DateTime(YYYY-MM-DD HH:MM:SS)
+string getYearFromDateTime(const string &);
+
+// Function to extract the month from a DateTime(YYYY-MM-DD HH:MM:SS)
+string getMonthFromDateTime(const string &);
+
+// Function to extract the day from a DateTime(YYYY-MM-DD HH:MM:SS)
+string getDayFromDateTime(const string &);
+
+// Function to extract the hours from a DateTime(YYYY-MM-DD HH:MM:SS)
+string getHoursFromDateTime(const string &);
+
+// Function to extract the minutes from a DateTime(YYYY-MM-DD HH:MM:SS)
+string getMinutesFromDateTime(const string &);
+
+// Function to extract the seconds from a DateTime(YYYY-MM-DD HH:MM:SS)
+string getSecondsFromDateTime(const string &);
+
+// Function to convert from a military Time (24 hours format) to civilian Time (12 hours format with meridian)
+string convertTimeToCivilian(int, int);
 
 // CUSTOM FUNCTIONS
 
@@ -720,6 +748,97 @@ bool isInvalid(const long double value, const double minValue) {
 void scoldUserIfInvalidInput(const long double value, const double minValue) {
     if (isInvalid(value, minValue))
         cout << "You must type a number greater or equal than " << minValue << ". Try again!" << endl;
+}
+
+// Function to validate the DateTime(YYYY-MM-DD HH:MM:SS)
+bool validDateTime(const string &datetimeAsString) {
+    if (datetimeAsString.empty()) return false;
+
+    // RegExp to check a valid DateTime(YYYY-MM-DD HH:MM:SS).
+    const regex pattern("^([0-9]{4})-(01|02|03|04|05|06|07|08|09|10|11|12)-([0-2][0-9]|30|31)"
+        "\\s([0-1][0-9]|[2][0-3]):([0-5][0-9]):([0-5][0-9])"
+        "$");
+
+    return regex_match(datetimeAsString, pattern);
+}
+
+// Function to extract all the components of a DateTime(YYYY-MM-DD HH:MM:SS)
+vector<string> getComponentsFromDateTime(const string &datetimeAsString) {
+    vector<string> dataComponents;
+
+    // RegExp to check a valid DateTime(YYYY-MM-DD HH:MM:SS).
+    const regex pattern("^([0-9]{4})-(01|02|03|04|05|06|07|08|09|10|11|12)-([0-2][0-9]|30|31)"
+        "\\s([0-1][0-9]|[2][0-3]):([0-5][0-9]):([0-5][0-9])"
+        "$");
+    std::smatch matches;
+
+    if (std::regex_search(datetimeAsString.begin(), datetimeAsString.end(), matches, pattern)) {
+        for (string match: matches) {
+            dataComponents.push_back(match);
+        }
+    }
+
+    return dataComponents;
+}
+
+// Function to extract the year from a DateTime(YYYY-MM-DD HH:MM:SS)
+string getYearFromDateTime(const string &datetimeAsString) {
+    vector<string> dateTimeComponents = getComponentsFromDateTime(datetimeAsString);
+    return dateTimeComponents.size() > 1 ? dateTimeComponents[1] : ""; // YYYY
+}
+
+// Function to extract the month from a DateTime(YYYY-MM-DD HH:MM:SS)
+string getMonthFromDateTime(const string &datetimeAsString) {
+    vector<string> dateTimeComponents = getComponentsFromDateTime(datetimeAsString);
+    return dateTimeComponents.size() > 1 ? dateTimeComponents[2] : ""; // MM
+}
+
+// Function to extract the day from a DateTime(YYYY-MM-DD HH:MM:SS)
+string getDayFromDateTime(const string &datetimeAsString) {
+    vector<string> dateTimeComponents = getComponentsFromDateTime(datetimeAsString);
+    return dateTimeComponents.size() > 1 ? dateTimeComponents[3] : ""; // DD
+}
+
+// Function to extract the hours from a DateTime(YYYY-MM-DD HH:MM:SS)
+string getHoursFromDateTime(const string &datetimeAsString) {
+    vector<string> dateTimeComponents = getComponentsFromDateTime(datetimeAsString);
+    return dateTimeComponents.size() > 1 ? dateTimeComponents[4] : ""; // HH
+}
+
+// Function to extract the minutes from a DateTime(YYYY-MM-DD HH:MM:SS)
+string getMinutesFromDateTime(const string &datetimeAsString) {
+    vector<string> dateTimeComponents = getComponentsFromDateTime(datetimeAsString);
+    return dateTimeComponents.size() > 1 ? dateTimeComponents[5] : ""; // MM
+}
+
+// Function to extract the seconds from a DateTime(YYYY-MM-DD HH:MM:SS)
+string getSecondsFromDateTime(const string &datetimeAsString) {
+    vector<string> dateTimeComponents = getComponentsFromDateTime(datetimeAsString);
+    return dateTimeComponents.size() > 1 ? dateTimeComponents[6] : ""; // SS
+}
+
+// Function to convert from a military Time (24 hours format) to civilian Time (12 hours format with meridian)
+string convertTimeToCivilian(const int militaryHours, const int minutes) {
+    string meridian;
+    int civilianHours;
+
+    // Handle midnight and noon
+    if (militaryHours == 0) {
+        civilianHours = 12;
+        meridian = "AM";
+    } else if (militaryHours == 12) {
+        civilianHours = 12;
+        meridian = "PM";
+    } else if (militaryHours < 12) {
+        civilianHours = militaryHours;
+        meridian = "AM";
+    } else {
+        civilianHours = militaryHours - 12;
+        meridian = "PM";
+    }
+
+    // cout << civilianHours << ":" << (minutes < 10 ? "0" : "") << minutes << meridian << endl;
+    return to_string(civilianHours) + ":" + (minutes < 10 ? "0" : "") + to_string(minutes) + " " + meridian;
 }
 
 
