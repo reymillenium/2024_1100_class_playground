@@ -509,13 +509,12 @@ int recursiveSum(const unsigned long long int number) {
 // Returns the string gramatic representation of an ordinal number, from a given int number
 string ordinalFromNumber(const long long int number) {
     const long long int lastDigit = number % 10;
-    string additive;
+    string additive = "th";
 
     switch (number) {
         case 11:
         case 12:
         case 13:
-            additive = "th";
             break;
         default:
             switch (lastDigit) {
@@ -528,8 +527,6 @@ string ordinalFromNumber(const long long int number) {
                 case 3:
                     additive = "rd";
                     break;
-                default:
-                    additive = "th";
             }
     }
 
