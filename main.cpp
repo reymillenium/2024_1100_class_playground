@@ -514,6 +514,7 @@ string ordinalFromNumber(const long long int number) {
     switch (number) {
         case 11:
         case 12:
+        case 13:
             additive = "th";
             break;
         default:
@@ -529,9 +530,7 @@ string ordinalFromNumber(const long long int number) {
                     break;
                 default:
                     additive = "th";
-                    break;
             }
-            break;
     }
 
     return to_string(number) + additive;
