@@ -42,13 +42,15 @@
 #include <vector> // to use vectors
 #include <fstream> // For ifstream, ofstrea, fstream
 #include <numeric> // For accumulate, transform_reduce, inner_product (in the vectors)
-#include <algorithm> // For max_element, min_element, find, transform (to use in vectors), or for max(), reverse
+#include <algorithm> // For max_element, min_element, find, transform (to use in vectors), or for max(), reverse, count_if
 #include <regex> // For regex, regex_match
 #include <cstring> // For strrev
+#include <filesystem>
 
 using std::cout;
 using std::endl;
 using std::cin;
+using std::cerr;
 using std::fixed;
 using std::setprecision;
 using std::setw;
@@ -62,9 +64,19 @@ using std::find;
 using std::regex;
 using std::regex_match;
 using std::regex_search;
+using std::smatch;
 using std::stoi;
 using std::stod;
 using std::isalpha;
+using std::count_if;
+using std::filesystem::exists;
+using std::ifstream;
+using std::ofstream;
+using std::ios_base;
+
+
+// UTILITY FUNCTIONS PROTOTYPES
+
 
 // Prints a given value, of almost any kind, once in the terminal
 template<typename T>
@@ -238,7 +250,30 @@ string getSecondsFromDateTime(const string &);
 // Function to convert from a military Time (24 hours format) to civilian Time (12 hours format with meridian)
 string convertTimeToCivilian(int, int);
 
-// CUSTOM FUNCTIONS
+// Detects if a given filename exist or not on the root of the executable file
+bool fileExist(const string &);
+
+// Gets all the non-empty lines of text inside a given file name
+vector<string> getLinesFromFile(const string &);
+
+// Either creates a .txt file and adds text to it, or adds to an existent one
+void addTextToFile(const string &);
+
+// Converts a giving string to lowercase
+void strToLowerCase(string &input);
+
+// Converts a giving string to uppercase
+void strToUpperCase(string &input);
+
+// Converts a string to lowercase and returns it
+string getLowerCase(string input);
+
+// Converts a string to uppercase and returns it
+string getUpperCase(string input);
+
+
+// CUSTOM MADE FUNCTIONS PROTOTYPES
+
 
 template<int N>
 void loadRainfalls(const vector<string> &, double (&)[N]);
@@ -280,6 +315,10 @@ int main() {
     cout << "Hello, World!" << endl;
     return 0;
 }
+
+
+// UTILITY FUNCTIONS DEFINITIONS
+
 
 // Prints a given value, of almost any kind, once in the terminal
 template<typename T>
@@ -342,7 +381,7 @@ int getInteger(const string &message, const int minValue, const int maxValue, co
         cout << message << (showRange ? (" (" + to_string(minValue) + " - " + to_string(maxValue) + ")") : "") << ": ";
         getline(cin, numberAsString);
 
-        if (const bool isIntegerNumber = isInteger(numberAsString); !isIntegerNumber) {
+        if (!isInteger(numberAsString)) {
             cout << "That's not an integer number. Try again." << endl;
             continue; // There is no point in keep validating any further, as it's not even an integer
         }
@@ -376,7 +415,7 @@ double getDouble(const string &message, const double minValue, const double maxV
             continue; // There is no point in keep validating any further, as it's not even a valid integer nor a floating point number
         }
 
-        number = std::stod(numberAsString); // When we reach this point, that means we have either a proper integer or a floating point number
+        number = stod(numberAsString); // When we reach this point, that means we have either a proper integer or a floating point number
         const bool invalidInput = number < minValue || maxValue < number; // If the input is valid, based only in minimum & maximum possible values
         // If the typed number is not among the given sentinel values (breaking values)
         const bool numberIsNotSentinel = count(sentinelValues.begin(), sentinelValues.end(), number) == 0;
@@ -766,9 +805,9 @@ vector<string> getComponentsFromDateTime(const string &datetimeAsString) {
     const regex pattern("^([0-9]{4})-(01|02|03|04|05|06|07|08|09|10|11|12)-([0-2][0-9]|30|31)"
         "\\s([0-1][0-9]|[2][0-3]):([0-5][0-9]):([0-5][0-9])"
         "$");
-    std::smatch matches;
+    smatch matches;
 
-    if (std::regex_search(datetimeAsString.begin(), datetimeAsString.end(), matches, pattern)) {
+    if (regex_search(datetimeAsString.begin(), datetimeAsString.end(), matches, pattern)) {
         for (string match: matches) {
             dataComponents.push_back(match);
         }
@@ -837,8 +876,87 @@ string convertTimeToCivilian(const int militaryHours, const int minutes) {
     return to_string(civilianHours) + ":" + (minutes < 10 ? "0" : "") + to_string(minutes) + " " + meridian;
 }
 
+// Detects if a given filename exist or not on the root of the executable file
+bool fileExist(const string &fileName) {
+    bool theFileExist = false; // If the file with text was already saved in the root of the executable
 
-// CUSTOM FUNCTIONS
+    if (exists(fileName))
+        theFileExist = true;
+
+    return theFileExist;
+}
+
+// Gets all the non-empty lines of text inside a given file name
+vector<string> getLinesFromFile(const string &fileName) {
+    ifstream inputFile(fileName);
+    vector<string> lines;
+
+    if (inputFile.is_open()) {
+        string line; // one single line at the time, to be read from the file
+
+        while (getline(inputFile, line)) {
+            if (!line.empty()) // If the line is empty then it's not interesting for us
+                lines.push_back(line);
+        }
+    } else {
+        cerr << "Error opening file\n";
+    }
+
+    // Closing the input file
+    inputFile.close();
+
+    return lines;
+}
+
+// Either creates a .txt file and adds text to it, or adds to an existent one
+void addTextToFile(const string &fileName) {
+    // Opens the input file & keeps the existing data (opens in append mode)
+    ofstream outputFile(fileName, ios_base::app);
+    // string textLine;
+
+    if (outputFile.is_open()) {
+        // We temporally store a single line of text, to be saved/added later to the .txt file
+        const string textLine = getStringFromMessage("Write a single line of text please: ");
+        if (!textLine.empty()) // There is no point on adding an empty string
+            outputFile << textLine << endl;
+    } else {
+        cerr << "Error opening file\n";
+    }
+
+    // Closing the output file
+    outputFile.close();
+}
+
+// Converts a giving string to lowercase
+void strToLowerCase(string &input) {
+    std::transform(input.begin(), input.end(), input.begin(),
+                   [](const unsigned char c) { return tolower(c); });
+}
+
+// Converts a giving string to uppercase
+void strToUpperCase(string &input) {
+    std::transform(input.begin(), input.end(), input.begin(),
+                   [](const unsigned char c) { return toupper(c); });
+}
+
+// Converts a string to lowercase and returns it
+string getLowerCase(string input) {
+    string destinationString = input;
+    std::transform(input.begin(), input.end(), destinationString.begin(),
+                   [](const unsigned char c) { return tolower(c); });
+    return destinationString;
+}
+
+// Converts a string to uppercase and returns it
+string getUpperCase(string input) {
+    string destinationString = input;
+    std::transform(input.begin(), input.end(), destinationString.begin(),
+                   [](const unsigned char c) { return toupper(c); });
+    return destinationString;
+}
+
+
+// CUSTOM MADE FUNCTIONS DEFINITIONS
 
 
 template<int N>
