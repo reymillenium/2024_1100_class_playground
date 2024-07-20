@@ -12,20 +12,19 @@
  **/
 
 /**
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *                                                                     *
- *   Name: 07-Arrays-intro                                             *
- *                                                                     *
- *   Purpose:                                                          *
- *   Receives 10 integers provided by the user from the console,       *
- *   and stores them in an array. And then based on them, it           *
- *   calculates the sum, the average and the largest element.          *
- *                                                                     *
- *   More Details:                                                     *
- *   https://github.com/reymillenium/20240621_0127_arrays_intro        *
- *                                                                     *
- *                                                                     *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *                                                                 *
+ *   Name: Reinier Garcia Ramos                                    *
+ *                                                                 *
+ *   Program Title: Class Playground                               *
+ *                                                                 *
+ *   Purpose:                                                      *
+ *   This is the basic initial stage to create any new program     *
+ *                                                                 *
+ *   More Details:                                                 *
+ *   https://github.com/reymillenium/2024_1100_class_playground    *
+ *                                                                 *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  **/
 
 #include <iostream>
@@ -73,9 +72,18 @@ using std::filesystem::exists;
 using std::ifstream;
 using std::ofstream;
 using std::ios_base;
+using std::random_device;
+using std::mt19937;
+using std::uniform_int_distribution;
 
 
-// UTILITY FUNCTIONS PROTOTYPES
+/**
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *                                                         *
+ *             UTILITY FUNCTIONS PROTOTYPES                *
+ *                                                         *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ **/
 
 
 // Prints a given value, of almost any kind, once in the terminal
@@ -86,13 +94,17 @@ void print(const T &);
 template<typename T>
 void printNTimes(const T &, int);
 
+// Prints a given value, of almost any kind, N given times in the terminal, and then breaks the line
+template<typename T>
+void printNTimesAndBreak(const T &, int);
+
 // Prints a given value, of almost any kind, once in the terminal, and then breaks the line
 template<typename T>
 void printLine(const T &);
 
 // Prints a given value, of almost any kind, N given times in the terminal, and then breaks the line
 template<typename T>
-void prinLineNTimes(const T &, int);
+void printLineNTimes(const T &, int);
 
 // Gets several types of values from the console (except strings with spaces, objects, etc, among others), as a response of a given question
 template<typename T>
@@ -271,8 +283,38 @@ string getLowerCase(string input);
 // Converts a string to uppercase and returns it
 string getUpperCase(string input);
 
+// Generates a Universally Unique IDentifier (the usual 36-character alphanumeric string. UUID style) as a string. Format: bdc0a2fb-d39e-0242-9a0a-4e760153f18d
+string getUUID();
 
-// CUSTOM MADE FUNCTIONS PROTOTYPES
+
+/**
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *                                                         *
+ *                STRUCTURE DEFINITIONS                    *
+ *                                                         *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ **/
+
+
+struct Employee {
+    string firstName;
+    string lastName;
+    string id;
+    double regRate {0.0};
+
+    Employee() = default;
+
+    [[nodiscard]] string fullName() const { return firstName + " " + lastName; }
+};
+
+
+/**
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *                                                         *
+ *           CUSTOM MADE FUNCTIONS PROTOTYPES              *
+ *                                                         *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ **/
 
 
 template<int N>
@@ -310,6 +352,16 @@ void displayResults(double, double, double);
 //     }
 // };
 
+
+/**
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *                                                         *
+ *                    MAIN FUNCTION                        *
+ *                                                         *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ **/
+
+
 // Main Function
 int main() {
     cout << "Hello, World!" << endl;
@@ -317,7 +369,13 @@ int main() {
 }
 
 
-// UTILITY FUNCTIONS DEFINITIONS
+/**
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *                                                         *
+ *            UTILITY FUNCTIONS DEFINITIONS                *
+ *                                                         *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ **/
 
 
 // Prints a given value, of almost any kind, once in the terminal
@@ -334,6 +392,15 @@ void printNTimes(const T &item, const int times) {
     }
 }
 
+// Prints a given value, of almost any kind, N given times in the terminal, and then breaks the line
+template<typename T>
+void printNTimesAndBreak(const T &item, const int times) {
+    for (int i = 0; i < times; i += 1) {
+        print(item);
+    }
+    printLine("");
+}
+
 // Prints a given value, of almost any kind, once in the terminal, and then breaks the line
 template<typename T>
 void printLine(const T &item) {
@@ -342,9 +409,9 @@ void printLine(const T &item) {
 
 // Prints a given value, of almost any kind, N given times in the terminal, and then breaks the line
 template<typename T>
-void prinLineNTimes(const T &item, const int times) {
+void printLineNTimes(const T &item, const int times) {
     for (int i = 0; i < times; i += 1) {
-        printl(item);
+        printLine(item);
     }
 }
 
@@ -475,7 +542,7 @@ string getString() {
 string humanizeInteger(const long long int integerValue) {
     const bool isNegative = integerValue < 0;
     string integerAsString = to_string(integerValue);
-    const int initialIndex = (integerAsString.length() - 3);
+    const int initialIndex = static_cast<int>(integerAsString.length() - 3);
     // We insert commas into the string every three digits, fromm right to left.
     for (int j = initialIndex; j > (isNegative ? 1 : 0); j -= 3) {
         integerAsString.insert(j, ",");
@@ -501,7 +568,7 @@ string humanizeDouble(const long double doubleValue, const int precision) {
 // Formats a given positive int by inserting a comma every 3 digits of its equivalent string, to make it more readable, by US standards
 string humanizeUnsignedInteger(const unsigned long long int integerValue) {
     string integerAsString = to_string(integerValue);
-    const int initialIndex = (integerAsString.length() - 3);
+    const int initialIndex = static_cast<int>(integerAsString.length() - 3);
     // We insert commas into the string every three digits, fromm right to left.
     for (int j = initialIndex; j > 0; j -= 3) {
         integerAsString.insert(j, ",");
@@ -518,7 +585,7 @@ string humanizeUnsignedDouble(const long double doubleValue, const int precision
     // Places the decimals into the stream, rounded to two significant digits (by default)
     stream << fixed << setprecision(precision) << decimals;
     // Extracts the decimals from the stream, as a string, still rounded to two significant digits (by default)
-    const string decimalsAsString = stream.str(); // It still includeds the zero & the dot. Ex: 0.34 (the dot must be removed next)
+    const string decimalsAsString = stream.str(); // It still includeds the "0" & the dot ("."). Ex: 0.34 (so the "0" must be removed next)
     return humanizeUnsignedInteger(integerValue) + decimalsAsString.substr(1, precision + 1);
 }
 
@@ -566,6 +633,7 @@ string ordinalFromNumber(const long long int number) {
                 case 3:
                     additive = "rd";
                     break;
+                default: ;
             }
     }
 
@@ -955,8 +1023,32 @@ string getUpperCase(string input) {
     return destinationString;
 }
 
+// Generates a Universally Unique IDentifier (the usual 36-character alphanumeric string. UUID style) as a string. Format: bdc0a2fb-d39e-0242-9a0a-4e760153f18d
+string getUUID() {
+    static random_device dev;
+    static mt19937 rng(dev());
+    uniform_int_distribution<int> dist(0, 15); // basic random int distribution of the indexes for 16 possible characters to choose from
+    constexpr bool mustAddDashes[] = {false, false, false, false, true, false, true, false, true, false, true, false, false, false, false, false};
+    string generatedID; // The conformed string to return
 
-// CUSTOM MADE FUNCTIONS DEFINITIONS
+    const string allowedCharacters = "0123456789abcdef";
+    for (const bool mustAddDashNow: mustAddDashes) {
+        if (mustAddDashNow) generatedID += "-"; // We insert the dash according to the planification inside the boolean array
+        generatedID += allowedCharacters[dist(rng)]; // Fully random index
+        generatedID += allowedCharacters[dist(rng)]; // Fully random index again, so we have at least a pair of characters (as string) added per iteration
+    }
+
+    return generatedID;
+}
+
+
+/**
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *                                                         *
+ *          CUSTOM MADE FUNCTIONS DEFINITIONS              *
+ *                                                         *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ **/
 
 
 template<int N>
