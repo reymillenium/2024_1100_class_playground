@@ -45,6 +45,7 @@
 #include <regex> // For regex, regex_match
 #include <cstring> // For strrev
 #include <filesystem>
+#include <memory>
 
 using std::cout;
 using std::endl;
@@ -268,6 +269,8 @@ bool fileExist(const string &);
 // Gets all the non-empty lines of text inside a given file name
 vector<string> getLinesFromFile(const string &);
 
+vector<short> getLinesFromFileSpecial(const string &);
+
 // Either creates a .txt file and adds text to it, or adds to an existent one
 void addTextToFile(const string &);
 
@@ -361,10 +364,81 @@ void displayResults(double, double, double);
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  **/
 
+short pixelToGrayscale(const short red, const short green, const short blue) {
+    return static_cast<short>((0.299 * red) + (0.587 * green) + (0.114 * blue));
+}
+
+std::unique_ptr<short[]> photoToGrayscalePro(short pixels[], int size) {
+    if (size % 3 == 0) {
+        // short * greyScaleValues =
+        std::unique_ptr<short[]> greyScaleValues(new short[size / 3]);
+
+        for (int i = 0; i < size; i += 3) {
+            greyScaleValues[i / 3] = pixelToGrayscale(pixels[i], pixels[i + 1], pixels[i + 2]);
+        }
+
+        // Getting the raw pointer to the array
+        short *rawPtr = greyScaleValues.get();
+        // Accessing elements through the raw pointer
+        for (int i = 0; i < (size / 3); ++i) {
+            cout << rawPtr[i] << endl;
+        }
+
+        return greyScaleValues;
+    }
+    return nullptr;
+}
+
+short *photoToGrayscale(short pixels[], int size) {
+    if (size % 3 == 0) {
+        // short * greyScaleValues =
+        short *greyScaleValues(new short[size / 3]);
+
+        for (int i = 0; i < size; i += 3) {
+            greyScaleValues[i / 3] = pixelToGrayscale(pixels[i], pixels[i + 1], pixels[i + 2]);
+        }
+
+        return greyScaleValues;
+    }
+    return nullptr;
+}
 
 // Main Function
 int main() {
-    cout << "Hello, World!" << endl;
+    if (fileExist("picture")) {
+        const vector<short> numbers = getLinesFromFileSpecial("picture");
+        const int width = numbers[0];
+        const int height = numbers[1];
+        const int imageSizeInPixels = width * height;
+
+        const int linesAmount = numbers.size();
+        const int pixelColorsAmount = linesAmount - 2;
+        const int colorValuesTriadsAmount = pixelColorsAmount / 3;
+
+        if (imageSizeInPixels == colorValuesTriadsAmount) {
+            short pixelValues[pixelColorsAmount];
+            for (int i = 2; i < linesAmount; i++) {
+                pixelValues[i - 2] = numbers[i];
+            }
+            // std::unique_ptr<short[]> greyScaleValues = photoToGrayscale(pixelValues, pixelColorsAmount);
+            short *greyScaleValues = photoToGrayscale(pixelValues, pixelColorsAmount);
+
+            // Getting the raw pointer to the array
+            // short *rawPtr = greyScaleValues.get();
+            // Accessing elements through the raw pointer
+            // for (int i = 0; i < colorValuesTriadsAmount; ++i) {
+            //     cout << rawPtr[i] << endl;
+            // }
+            for (int i = 0; i < colorValuesTriadsAmount; ++i) {
+                cout << *(greyScaleValues + i) << endl;
+            }
+        } else {
+            cout << "INVALID" << endl;
+        }
+    } else {
+        cout << "Do not exist" << endl;
+    }
+
     return 0;
 }
 
@@ -974,6 +1048,43 @@ vector<string> getLinesFromFile(const string &fileName) {
     inputFile.close();
 
     return lines;
+}
+
+// Gets all the non-empty lines of text inside a given file name
+vector<short> getLinesFromFileSpecial(const string &fileName) {
+    ifstream inputFile(fileName);
+    vector<string> stringLines;
+    vector<short> numbers;
+
+    if (inputFile.is_open()) {
+        string line; // one single line at the time, to be read from the file
+
+        while (getline(inputFile, line)) {
+            if (!line.empty()) // If the line is empty then it's not interesting for us
+                stringLines.push_back(line);
+        }
+    } else {
+        cerr << "Error opening file\n";
+    }
+
+    std::regex regex(R"(\d+)"); // matches a sequence of digits
+
+    for (auto line: stringLines) {
+        std::smatch match;
+        while (std::regex_search(line, match, regex)) {
+            numbers.push_back(std::stoi(match.str()));
+            line = match.suffix();
+        }
+    }
+
+    // for (auto number: numbers) {
+    //     cout << number << endl;
+    // }
+
+    // Closing the input file
+    inputFile.close();
+
+    return numbers;
 }
 
 // Either creates a .txt file and adds text to it, or adds to an existent one
