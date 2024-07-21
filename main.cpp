@@ -41,11 +41,10 @@
 #include <vector> // to use vectors
 #include <fstream> // For ifstream, ofstrea, fstream
 #include <numeric> // For accumulate, transform_reduce, inner_product (in the vectors)
-#include <algorithm> // For max_element, min_element, find, transform (to use in vectors), or for max(), reverse, count_if
+#include <algorithm> // For max_element, min_element, find, transform (to use in vectors), or for max(), reverse, count_if, any_of, all_of, none_of, etc
 #include <regex> // For regex, regex_match
 #include <cstring> // For strrev
 #include <filesystem>
-#include <memory>
 
 using std::cout;
 using std::endl;
@@ -76,6 +75,16 @@ using std::ios_base;
 using std::random_device;
 using std::mt19937;
 using std::uniform_int_distribution;
+
+
+/**
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *                                                         *
+ *                   GLOBAL CONSTANTS                      *
+ *                                                         *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ **/
+
 
 
 /**
@@ -269,8 +278,6 @@ bool fileExist(const string &);
 // Gets all the non-empty lines of text inside a given file name
 vector<string> getLinesFromFile(const string &);
 
-vector<short> getLinesFromFileSpecial(const string &);
-
 // Either creates a .txt file and adds text to it, or adds to an existent one
 void addTextToFile(const string &);
 
@@ -364,81 +371,10 @@ void displayResults(double, double, double);
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  **/
 
-short pixelToGrayscale(const short red, const short green, const short blue) {
-    return static_cast<short>((0.299 * red) + (0.587 * green) + (0.114 * blue));
-}
-
-std::unique_ptr<short[]> photoToGrayscalePro(short pixels[], int size) {
-    if (size % 3 == 0) {
-        // short * greyScaleValues =
-        std::unique_ptr<short[]> greyScaleValues(new short[size / 3]);
-
-        for (int i = 0; i < size; i += 3) {
-            greyScaleValues[i / 3] = pixelToGrayscale(pixels[i], pixels[i + 1], pixels[i + 2]);
-        }
-
-        // Getting the raw pointer to the array
-        short *rawPtr = greyScaleValues.get();
-        // Accessing elements through the raw pointer
-        for (int i = 0; i < (size / 3); ++i) {
-            cout << rawPtr[i] << endl;
-        }
-
-        return greyScaleValues;
-    }
-    return nullptr;
-}
-
-short *photoToGrayscale(short pixels[], int size) {
-    if (size % 3 == 0) {
-        // short * greyScaleValues =
-        short *greyScaleValues(new short[size / 3]);
-
-        for (int i = 0; i < size; i += 3) {
-            greyScaleValues[i / 3] = pixelToGrayscale(pixels[i], pixels[i + 1], pixels[i + 2]);
-        }
-
-        return greyScaleValues;
-    }
-    return nullptr;
-}
 
 // Main Function
 int main() {
-    if (fileExist("picture")) {
-        const vector<short> numbers = getLinesFromFileSpecial("picture");
-        const int width = numbers[0];
-        const int height = numbers[1];
-        const int imageSizeInPixels = width * height;
-
-        const int linesAmount = numbers.size();
-        const int pixelColorsAmount = linesAmount - 2;
-        const int colorValuesTriadsAmount = pixelColorsAmount / 3;
-
-        if (imageSizeInPixels == colorValuesTriadsAmount) {
-            short pixelValues[pixelColorsAmount];
-            for (int i = 2; i < linesAmount; i++) {
-                pixelValues[i - 2] = numbers[i];
-            }
-            // std::unique_ptr<short[]> greyScaleValues = photoToGrayscale(pixelValues, pixelColorsAmount);
-            short *greyScaleValues = photoToGrayscale(pixelValues, pixelColorsAmount);
-
-            // Getting the raw pointer to the array
-            // short *rawPtr = greyScaleValues.get();
-            // Accessing elements through the raw pointer
-            // for (int i = 0; i < colorValuesTriadsAmount; ++i) {
-            //     cout << rawPtr[i] << endl;
-            // }
-            for (int i = 0; i < colorValuesTriadsAmount; ++i) {
-                cout << *(greyScaleValues + i) << endl;
-            }
-        } else {
-            cout << "INVALID" << endl;
-        }
-    } else {
-        cout << "Do not exist" << endl;
-    }
-
+    cout << "Hello, World!" << endl;
     return 0;
 }
 
@@ -569,8 +505,7 @@ double getDouble(const string &message, const double minValue, const double maxV
 
 bool containsSingleChar(const string &input) {
     if (input.empty() || input.length() > 1) return false;
-    return true;
-}
+    return true;}
 
 char getAlphaChar(const string &message, const string &errorMessage) {
     string characterAsString; // Value typed by the user, that can be a char or not
@@ -642,7 +577,7 @@ string humanizeDouble(const long double doubleValue, const int precision) {
 // Formats a given positive int by inserting a comma every 3 digits of its equivalent string, to make it more readable, by US standards
 string humanizeUnsignedInteger(const unsigned long long int integerValue) {
     string integerAsString = to_string(integerValue);
-    const int initialIndex = static_cast<int>(integerAsString.length() - 3);
+    const int initialIndex = (integerAsString.length() - 3);
     // We insert commas into the string every three digits, fromm right to left.
     for (int j = initialIndex; j > 0; j -= 3) {
         integerAsString.insert(j, ",");
@@ -700,14 +635,11 @@ string ordinalFromNumber(const long long int number) {
             switch (lastDigit) {
                 case 1:
                     additive = "st";
-                    break;
-                case 2:
+                    break;                case 2:
                     additive = "nd";
-                    break;
-                case 3:
+                    break;                case 3:
                     additive = "rd";
-                    break;
-                default: ;
+                    break;                default: ;
             }
     }
 
@@ -1050,60 +982,23 @@ vector<string> getLinesFromFile(const string &fileName) {
     return lines;
 }
 
-// Gets all the non-empty lines of text inside a given file name
-vector<short> getLinesFromFileSpecial(const string &fileName) {
-    ifstream inputFile(fileName);
-    vector<string> stringLines;
-    vector<short> numbers;
-
-    if (inputFile.is_open()) {
-        string line; // one single line at the time, to be read from the file
-
-        while (getline(inputFile, line)) {
-            if (!line.empty()) // If the line is empty then it's not interesting for us
-                stringLines.push_back(line);
-        }
-    } else {
-        cerr << "Error opening file\n";
-    }
-
-    std::regex regex(R"(\d+)"); // matches a sequence of digits
-
-    for (auto line: stringLines) {
-        std::smatch match;
-        while (std::regex_search(line, match, regex)) {
-            numbers.push_back(std::stoi(match.str()));
-            line = match.suffix();
-        }
-    }
-
-    // for (auto number: numbers) {
-    //     cout << number << endl;
-    // }
-
-    // Closing the input file
-    inputFile.close();
-
-    return numbers;
-}
-
 // Either creates a .txt file and adds text to it, or adds to an existent one
 void addTextToFile(const string &fileName) {
-    // Opens the input file & keeps the existing data (opens in append mode)
-    ofstream outputFile(fileName, ios_base::app);
-    // string textLine;
+// Opens the input file & keeps the existing data (opens in append mode)
+ofstream outputFile(fileName, ios_base::app);
+// string textLine;
 
-    if (outputFile.is_open()) {
-        // We temporally store a single line of text, to be saved/added later to the .txt file
-        const string textLine = getStringFromMessage("Write a single line of text please: ");
-        if (!textLine.empty()) // There is no point on adding an empty string
-            outputFile << textLine << endl;
-    } else {
-        cerr << "Error opening file\n";
-    }
+if (outputFile.is_open()) {
+    // We temporally store a single line of text, to be saved/added later to the .txt file
+    const string textLine = getStringFromMessage("Write a single line of text please: ");
+    if (!textLine.empty()) // There is no point on adding an empty string
+        outputFile << textLine << endl;
+} else {
+    cerr << "Error opening file\n";
+}
 
-    // Closing the output file
-    outputFile.close();
+// Closing the output file
+outputFile.close();
 }
 
 // Converts a giving string to lowercase
